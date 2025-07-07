@@ -1,0 +1,190 @@
+// schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum LeadSource {
+  ADS
+  REFERRAL
+  OTHER
+}
+
+enum ContactStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  MEETING
+  OTHER
+}
+
+model User {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+
+  // Relations
+  contacts      Contact[]  @relation("ContactOwner")
+  deals         Deal[]     @relation("DealOwner")
+  pipelines     Pipeline[]
+  tasksAssigned Task[]     @relation("AssignedTasks")
+
+  @@map("users")
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  industry  String
+  website   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contacts Contact[]
+
+  @@map("companies")
+}
+
+model Contact {
+  id         String        @id @default(uuid())
+  companyId  String        @map("company_id")
+  ownerId    String        @map("owner_id")
+  name       String
+  email      String
+  phone      String?
+  leadSource LeadSource    @map("lead_source")
+  status     ContactStatus
+
+  // Relations
+  company             Company             @relation(fields: [companyId], references: [id])
+  owner               User                @relation("ContactOwner", fields: [ownerId], references: [id])
+  deals               Deal[]
+  activities          Activity[]
+  activityAiSummaries ActivityAISummary[]
+  tasks               Task[]
+  tags                ContactTag[]
+
+  @@map("contacts")
+}
+
+model Deal {
+  id        String    @id @default(uuid())
+  contactId String    @map("contact_id")
+  ownerId   String    @map("owner_id")
+  stageId   String    @map("stage_id")
+  title     String
+  amount    Float
+  status    String
+  closeDate DateTime? @map("close_date")
+
+  // Relations
+  contact             Contact             @relation(fields: [contactId], references: [id])
+  owner               User                @relation("DealOwner", fields: [ownerId], references: [id])
+  stage               DealStage           @relation(fields: [stageId], references: [id])
+  activities          Activity[]
+  activityAiSummaries ActivityAISummary[]
+  tasks               Task[]
+
+  @@map("deals")
+}
+
+model DealStage {
+  id         String @id @default(uuid())
+  name       String
+  order      Int
+  pipelineId String @map("pipeline_id")
+
+  // Relations
+  pipeline Pipeline @relation(fields: [pipelineId], references: [id])
+  deals    Deal[]
+
+  @@map("deal_stages")
+}
+
+model Pipeline {
+  id          String  @id @default(uuid())
+  ownerId     String  @map("owner_id")
+  name        String
+  description String?
+
+  // Relations
+  owner      User        @relation(fields: [ownerId], references: [id])
+  dealStages DealStage[]
+
+  @@map("pipelines")
+}
+
+model Activity {
+  id        String       @id @default(uuid())
+  contactId String       @map("contact_id")
+  dealId    String       @map("deal_id")
+  type      ActivityType
+  content   String
+
+  // Relations
+  contact Contact @relation(fields: [contactId], references: [id])
+  deal    Deal    @relation(fields: [dealId], references: [id])
+
+  @@map("activities")
+}
+
+model ActivityAISummary {
+  id        String @id @default(uuid())
+  dealId    String @map("deal_id")
+  contactId String @map("contact_id")
+  content   String
+
+  // Relations
+  deal    Deal    @relation(fields: [dealId], references: [id])
+  contact Contact @relation(fields: [contactId], references: [id])
+
+  @@map("activity_ai_summaries")
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  dueDate     DateTime @map("due_date")
+  isCompleted Boolean  @default(false) @map("is_completed")
+  assignedTo  String   @map("assigned_to")
+  contactId   String?  @map("contact_id")
+  dealId      String?  @map("deal_id")
+
+  // Relations
+  contact  Contact? @relation(fields: [contactId], references: [id])
+  deal     Deal?    @relation(fields: [dealId], references: [id])
+  assignee User     @relation("AssignedTasks", fields: [assignedTo], references: [id])
+
+  @@map("tasks")
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String
+
+  contactTag ContactTag[]
+
+  @@map("tags")
+}
+
+model ContactTag {
+  id        String @id @default(uuid())
+  contactId String @map("contact_id")
+  tagId     String @map("tag_id")
+
+  // Relations
+  contact Contact @relation(fields: [contactId], references: [id])
+  tag     Tag     @relation(fields: [tagId], references: [id])
+}
