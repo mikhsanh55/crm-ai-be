@@ -12,6 +12,7 @@ generator client {
 enum LeadSource {
   ADS
   REFERRAL
+  DIRECT
   OTHER
 }
 
@@ -59,7 +60,7 @@ model Company {
 
 model Contact {
   id         String        @id @default(uuid())
-  companyId  String        @map("company_id")
+  companyId  String?        @map("company_id")
   ownerId    String        @map("owner_id")
   name       String
   email      String
@@ -68,7 +69,7 @@ model Contact {
   status     ContactStatus
 
   // Relations
-  company             Company             @relation(fields: [companyId], references: [id])
+  company             Company?             @relation(fields: [companyId], references: [id])
   owner               User                @relation("ContactOwner", fields: [ownerId], references: [id])
   deals               Deal[]
   activities          Activity[]
