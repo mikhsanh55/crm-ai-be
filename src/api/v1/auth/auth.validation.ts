@@ -6,3 +6,8 @@ export const register = z.strictObject({
     email: z.string().email(),
     password: z.string().superRefine(password).transform(hashPassword),
 })
+
+export const login = z.strictObject({
+    email: z.string().email(),
+    password: z.string().min(8)
+})

@@ -6,9 +6,7 @@ import httpStatus from 'http-status'
 
 export const register: Handler = async (c: Context) => {
     const rawPayload = await c.req.json()
-    console.log('rawPayload', rawPayload)
     const parsedData = await authValidation.register.parseAsync(rawPayload)
-    console.log('parsedData', parsedData)
 
     const newUser = await authService.register(parsedData)
     const result = {
@@ -18,6 +16,20 @@ export const register: Handler = async (c: Context) => {
             name: newUser.name,
             email: newUser.email
         }
+    }
+
+    return c.json(result, httpStatus.OK)
+}
+
+export const login: Handler = async (c: Context) => {
+    const rawPayload = await c.req.json()
+    const parsedData = await authValidation.login.parse(rawPayload)
+
+    const response = await authService.login(parsedData)
+
+    const result = {
+        success: true,
+        data: response
     }
 
     return c.json(result, httpStatus.OK)
