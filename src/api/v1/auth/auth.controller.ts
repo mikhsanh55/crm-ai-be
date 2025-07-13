@@ -1,7 +1,6 @@
 import { type Context, type Handler } from "hono";
 import * as authValidation from './auth.validation'
 import * as authService from './auth.service'
-import { success } from "zod";
 import httpStatus from 'http-status'
 
 export const register: Handler = async (c: Context) => {
