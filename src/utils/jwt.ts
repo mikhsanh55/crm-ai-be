@@ -47,5 +47,10 @@ export function signForgotPasswordToken(payload: object): { token: string, expir
 }
 
 export function verifyToken<T = any>(token: string): T {
-  return jwt.verify(token, JWT_SECRET) as T
+  try {
+    return jwt.verify(token, JWT_SECRET) as T
+  }
+  catch (error) {
+    throw error // Ensure the error is thrown correctly
+  }
 }

@@ -4,6 +4,7 @@ import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import httpStatus from "http-status";
 import { routes } from "./routes";
+import { errorHandler } from "@/middlewares/errorHandler";
 
 const app = new Hono()
 
@@ -11,6 +12,9 @@ const app = new Hono()
 app.use("*", logger())
 app.use("*", cors())
 app.use('*', prettyJSON())
+
+// apply global error handler
+app.use("*", errorHandler)
 
 // apply 404 not found
 app.notFound((c) => {
